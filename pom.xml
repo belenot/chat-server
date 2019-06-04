@@ -1,0 +1,53 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.belenot.chat</groupId>
+  <artifactId>chat</artifactId>
+  <version>1</version>
+  <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.sourceEncoding>UTF-8</maven.compiler.sourceEncoding>
+    <maven.compiler.targetEncoding>UTF-8</maven.compiler.targetEncoding>
+    <spring.ver>5.0.9.RELEASE</spring.ver>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>${spring.ver}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context-support</artifactId>
+      <version>${spring.ver}</version>
+    </dependency>
+  </dependencies>
+
+  
+  <build>
+    <plugins>
+      <plugin>
+	<artifactId>maven-assembly-plugin</artifactId>
+	<executions>
+	  <execution>
+	    <phase>package</phase>
+	    <goals>
+	      <goal>single</goal>
+	    </goals>
+	    <configuration>
+	      <descriptorRefs>
+		<descriptorRef>jar-with-dependencies</descriptorRef>
+	      </descriptorRefs>
+	      <archive>
+		<manifest>
+		  <mainClass>com.belenot.chat.Main</mainClass>
+		</manifest>
+	      </archive>
+	    </configuration>
+	  </execution>
+	</executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
