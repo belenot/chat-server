@@ -2,6 +2,7 @@ package com.belenot.chat;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.logging.Logger;
@@ -10,8 +11,9 @@ import com.belenot.chat.domain.Client;
 import com.belenot.chat.domain.Message;
 
 public class ClientConnection implements Runnable, Closeable {
-    private boolean isStarted = false;
-    private boolean isClosed = false;
+    private boolean started = false;
+    private boolean closed = false;
+    private int max_buffer = 1024;
     
     private Client client;
     private Socket socket;
@@ -35,22 +37,45 @@ public class ClientConnection implements Runnable, Closeable {
 	
     }
     
-    public boolean isStarted() { return isStarted; }
-    public boolean isClosed() { return isClosed; }
+    public boolean isStarted() { return started; }
+    public boolean isClosed() { return closed; }
 
 
     @Override
     public void run() {
-	isStarted = true;
-	// Handle client requests
+	started = true;
+	try {
+	    InputStream in = socket.getInputStream();
+	    long timeout = 5000;
+	    long start = System.currentTimeMillis();
+	    int b;
+	    String textBuffer = "";
+	    while (!closed && socket != null && !socket.isClosed() && in != null) {
+		while ( (b = in.read()) > 0) {
+		    textBuffer += (char)b;
+		}
+		if (textBuffer.length() > 0) {
+		    publisher.publish(client, textBuffer);
+		    textBuffer = "";
+		    start = System.currentTimeMillis();
+		}
+		else if ( (System.currentTimeMillis() - start) > timeout) break;
+	    }
+	} catch (IOException exc) {
+	    logger.severe("Error during connection with client with name " + client.getName());
+	}
+	finally {
+	    close();
+	}
     }
 
     @Override
     public void close() {
+	logger.info(String.format("Close connection with client %s", client.getName()));
 	try {
 	    if (socket != null && !socket.isClosed()) socket.close();
 	} catch (IOException exc) { }
-	isClosed = true;
+	closed = true;
     }
     
 }

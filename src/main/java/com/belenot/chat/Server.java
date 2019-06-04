@@ -3,7 +3,10 @@ package com.belenot.chat;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.Arrays;
 
 import com.belenot.chat.dao.ClientDao;
 import com.belenot.chat.domain.Client;
@@ -13,14 +16,16 @@ public class Server implements Runnable, AutoCloseable {
     private ServerSocket serverSocket;
     /////
     private boolean stopped = false;
+    private boolean closed = false;
     
     private int serverSocketPort;
     private ClientDao clientDao;
     private ClientConnectionFactory clientConnectionFactory;
+    private Set<ClientConnection> createdClientConnectionSet = new HashSet<>();
     ////
     private Logger logger;
 
-    public void setServerPort(int serverSocketPort) { this.serverSocketPort = serverSocketPort; }
+    public void setServerSocketPort(int serverSocketPort) { this.serverSocketPort = serverSocketPort; }
     public void setClientDao(ClientDao clientDao) { this.clientDao = clientDao; }
     public void setClientConnectionFactory(ClientConnectionFactory clientConnectionFactory) { this.clientConnectionFactory = clientConnectionFactory; }
     public void setLogger(Logger logger) { this.logger = logger; }
@@ -40,6 +45,8 @@ public class Server implements Runnable, AutoCloseable {
 	while (!stopped && !closed) {
 	    Socket clientSocket = null;
 	    byte[] buffer = new byte[1024];
+	    Arrays.fill(buffer, 0, buffer.length, (byte)0);
+	    logger.info(String.format("Listen for connections on %d\n", serverSocketPort));
 	    try {
 		clientSocket = serverSocket.accept();
 		clientSocket.getInputStream().read(buffer);
@@ -47,7 +54,8 @@ public class Server implements Runnable, AutoCloseable {
 		logger.severe("Error while  proccessing client socket");
 		exc.printStackTrace();
 	    }
-	    String name = new String(buffer);
+	    String name = (new String(buffer)).trim();
+	    logger.info(String.format("Connection from client: %s", name));
 	    Client client = clientDao.getClient(name);
 	    if (client == null) {
 		String msg = String.format("Can't gain client by name %s\n", name);
@@ -58,13 +66,20 @@ public class Server implements Runnable, AutoCloseable {
 		continue;
 	    }
 	    ClientConnection clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
+	    createdClientConnectionSet.add(clientConnection);
+	    logger.info(String.format("Run processing connection with client %s (id=%d)", name, client.getId()));
 	    runThread(clientConnection);
 	}
     }
 
     @Override
     public void close() {
+	closed = true;
+	stopped = true;
 	try {
+	    for (ClientConnection clientConnection : createdClientConnectionSet) {
+		clientConnection.close();
+	    }
 	    if(serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
 	} catch (IOException exc) {
 	    logger.severe("Error while closing server socket");
@@ -86,6 +101,6 @@ public class Server implements Runnable, AutoCloseable {
 
     ////
     private void runThread(Runnable runnable) {
-	(new Thread()).start();
+	(new Thread(runnable)).start();
     }
 }

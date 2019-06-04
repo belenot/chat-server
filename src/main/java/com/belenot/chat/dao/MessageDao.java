@@ -1,6 +1,7 @@
 package com.belenot.chat.dao;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,7 +9,7 @@ import com.belenot.chat.domain.Client;
 import com.belenot.chat.domain.Message;
 
 public class MessageDao {
-    private List<Message> messageList;
+    private List<Message> messageList = new LinkedList<>();
 
     public Message addMessage(Client client, String text) {
 	Message message = new Message();
