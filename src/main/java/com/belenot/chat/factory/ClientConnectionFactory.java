@@ -17,7 +17,7 @@ public class ClientConnectionFactory {
     public void setLogger(Logger logger) { this.logger = logger; }
     
     public ClientConnection newClientConnection(Client client, Socket socket) {
-	try { socket.setSoTimeout(soTimeout); } catch (Exception exc) { }
+	//try { socket.setSoTimeout(soTimeout); } catch (Exception exc) { }
 	ClientConnection clientConnection = new ClientConnection();
 	clientConnection.setClient(client);
 	clientConnection.setSocket(socket);

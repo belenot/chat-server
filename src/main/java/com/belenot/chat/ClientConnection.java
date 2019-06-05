@@ -51,7 +51,7 @@ public class ClientConnection implements Runnable, Closeable {
 	    int b;
 	    String textBuffer = "";
 	    while (!closed && socket != null && !socket.isClosed() && in != null) {
-		while ( (b = in.read()) > 0) {
+		while ( in.available() > 0 && (b = in.read()) > 0) {
 		    textBuffer += (char)b;
 		}
 		if (textBuffer.length() > 0) {
@@ -59,7 +59,13 @@ public class ClientConnection implements Runnable, Closeable {
 		    textBuffer = "";
 		    start = System.currentTimeMillis();
 		}
-		else if ( (System.currentTimeMillis() - start) > timeout) break;
+		else if ( (System.currentTimeMillis() - start) > timeout) {
+		    try {
+			Thread.sleep(1000);
+		    } catch (InterruptedException exc) {
+			logger.severe("Can't sleep thread in client connection with " + client.getName());
+		    }
+		}
 	    }
 	} catch (IOException exc) {
 	    logger.severe("Error during connection with client with name " + client.getName());
