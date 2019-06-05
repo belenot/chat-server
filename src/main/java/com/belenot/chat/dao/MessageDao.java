@@ -17,7 +17,7 @@ public class MessageDao {
 	message.setId(id);
 	message.setDate(new Date());
 	message.setClient(client);
-	message.setText(text);
+	message.setText(text + "\0");
 	messageList.add(message);
 	return message;
     }
