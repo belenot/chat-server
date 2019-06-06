@@ -69,13 +69,33 @@ public class ClientDao {
 	return addClient(name, name);
     }
 	
-    
+
+    //NEED TRANSACTION!!!
     public Client addClient(String name, String password) {
-	Client client = new Client();
-	client.setId(++currentId);
-	client.setName(name);
-	clients.put(client, password);
-	return client;
+	try {
+	    String sql_query = String.format("INSERT INTO client (name) values ('%s');", name);
+	    PreparedStatement st = conn.prepareStatement(sql_query);
+	    st.executeUpdate();
+	    sql_query = String.format("SELECT currval('client_id_seq');");
+	    st = conn.prepareStatement(sql_query);
+	    ResultSet rs = st.executeQuery();
+	    int id = -1;
+	    if (rs.next()) {
+		id = rs.getInt(1);
+	    } else {
+		throw new SQLException();
+	    }
+	    sql_query = String.format("INSERT INTO password (client, password) VALUES (%d, '%s');", id, password);
+	    st = conn.prepareStatement(sql_query);
+	    st.executeUpdate();
+	    Client client = new Client();
+	    client.setId(id);
+	    client.setName(name);
+	    return client;
+	} catch (SQLException exc) {
+	    logger.severe(exc.getSQLState());
+	    return null;
+	}
     }
 	
 }

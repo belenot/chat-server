@@ -66,6 +66,11 @@ public class Server implements Runnable, AutoCloseable {
 	    }
 	    logger.info(String.format("Connection from client: %s", name));
 	    Client client = clientDao.getClient(name, password);
+	    if (client == null ) {
+		String msg = String.format("There doesn't exist client with name %s, try to create it", name);
+		logger.warning(msg);
+		client = clientDao.addClient(name, password);
+	    }
 	    if (client == null) {
 		String msg = String.format("Can't gain client by name %s\n", name);
 		logger.severe(msg);
