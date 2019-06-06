@@ -53,10 +53,19 @@ public class Server implements Runnable, AutoCloseable {
 	    } catch (IOException exc) {
 		logger.severe("Error while  proccessing client socket");
 		exc.printStackTrace();
+		continue;
 	    }
-	    String name = (new String(buffer)).trim();
+	    
+	    String name = null;
+	    String password = null;
+	    try {
+		name = retrieveName(buffer);
+		password = retrievePassword(buffer);
+	    } catch (Exception exc) {
+		logger.severe("Illegal data format from socket");
+	    }
 	    logger.info(String.format("Connection from client: %s", name));
-	    Client client = clientDao.getClient(name);
+	    Client client = clientDao.getClient(name, password);
 	    if (client == null) {
 		String msg = String.format("Can't gain client by name %s\n", name);
 		logger.severe(msg);
@@ -102,5 +111,18 @@ public class Server implements Runnable, AutoCloseable {
     ////
     private void runThread(Runnable runnable) {
 	(new Thread(runnable)).start();
+    }
+
+    //template username\npassword
+    private String retrieveName(byte[] buffer) throws Exception {
+	String strBuffer = (new String(buffer)).trim();
+	String name = strBuffer.split("\n")[0];
+	return name;
+    }
+
+    private String retrievePassword(byte[] buffer) throws Exception {
+	String strBuffer = (new String(buffer)).trim();
+	String password = strBuffer.split("\n")[1];
+	return password;
     }
 }

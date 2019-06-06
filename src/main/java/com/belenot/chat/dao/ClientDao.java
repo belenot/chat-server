@@ -1,35 +1,32 @@
 package com.belenot.chat.dao;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.belenot.chat.domain.Client;
 
 public class ClientDao {
-    private Set<Client> clientSet = new HashSet<>();
+    private Map<Client, String> clients = new HashMap<>();
     private int currentId = 0;
 
-    public Client getClient(int id) {
-	Client client = clientSet.stream().filter( (c) -> (c.getId() == id)).findFirst().get();
-	return client;
-    }
-
-    public Set<Client> getClients(String name) {
-        Set<Client> clients = clientSet.stream().filter( (c) -> (c.getName().equals(name))).collect(Collectors.toSet());
-	return clients;
-    }
-
-    public Client getClient(String name) {
-	for (Client client : getClients(name)) { return client; }
+    public Client getClient(String name, String password) {
+	for (Map.Entry<Client, String> entry : clients.entrySet()) {
+	    if (entry.getKey().getName().equals(name) && entry.getValue().equals(password))
+		return entry.getKey();
+	}
 	return null;
     }
 
     public Client addClient(String name) {
+	return addClient(name, name);
+    }
+	
+    
+    public Client addClient(String name, String password) {
 	Client client = new Client();
 	client.setId(++currentId);
 	client.setName(name);
-	clientSet.add(client);
+	clients.put(client, password);
 	return client;
     }
 	

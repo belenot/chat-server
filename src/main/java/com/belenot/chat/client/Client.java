@@ -12,17 +12,20 @@ public class Client {
     
     public static void main(String[] args) {
 	Socket socket = null;
-	String userName;
+	String userName = null;
+	String password = null;
 	try {
-	    System.out.print("Username: ");
-	    userName = (new BufferedReader(new InputStreamReader(System.in))).readLine();
 	    System.out.print("host:port=");
 	    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	    String strBuffer = br.readLine();
 	    String host = strBuffer.split(":")[0];
 	    int port = Integer.parseInt(strBuffer.split(":")[1]);
+	    System.out.print("Username: ");
+	    userName = br.readLine();
+	    System.out.print("Password: ");
+	    password = br.readLine();
 	    socket = new Socket(host, port);
-	    socket.getOutputStream().write(userName.getBytes());
+	    socket.getOutputStream().write((new String(userName + "\n" + password)).getBytes());
 	    strBuffer = "";
 	    while (!strBuffer.equals("exit")) {
 		strBuffer = br.readLine();
