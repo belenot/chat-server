@@ -24,12 +24,17 @@ public class ChatConfig {
 	return logger;
     }
 
-    @Bean
+    @Bean( initMethod = "init" )
     public ClientDao clientDao() {
 	ClientDao clientDao = new ClientDao();
-	clientDao.addClient("ivan");
-	clientDao.addClient("vasya");
-	clientDao.addClient("igor");
+	//clientDao.addClient("ivan");
+	//clientDao.addClient("vasya");
+	//clientDao.addClient("igor");
+	clientDao.setHost("localhost");
+	clientDao.setPort(8832);
+	clientDao.setUser("chat_db");
+	clientDao.setPassword("chat_db");
+	clientDao.setLogger(logger());
 	return clientDao;
     }
 
