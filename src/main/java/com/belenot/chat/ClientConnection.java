@@ -13,7 +13,6 @@ import com.belenot.chat.domain.Message;
 public class ClientConnection implements Runnable, Closeable {
     private boolean started = false;
     private boolean closed = false;
-    private int max_buffer = 1024;
     
     private Client client;
     private Socket socket;
@@ -55,6 +54,9 @@ public class ClientConnection implements Runnable, Closeable {
 		    textBuffer += (char)b;
 		}
 		if (textBuffer.length() > 0) {
+		    if (textBuffer.equals("close")) {
+			break;
+		    }
 		    publisher.publish(client, textBuffer);
 		    textBuffer = "";
 		    start = System.currentTimeMillis();

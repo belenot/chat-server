@@ -27,9 +27,6 @@ public class ChatConfig {
     @Bean( initMethod = "init" )
     public ClientDao clientDao() {
 	ClientDao clientDao = new ClientDao();
-	//clientDao.addClient("ivan");
-	//clientDao.addClient("vasya");
-	//clientDao.addClient("igor");
 	clientDao.setHost("localhost");
 	clientDao.setPort(8832);
 	clientDao.setUser("chat_db");
@@ -70,6 +67,7 @@ public class ChatConfig {
 	server.setServerSocketPort(5678);
 	server.setClientDao(clientDao());
 	server.setClientConnectionFactory(clientConnectionFactory());
+	server.setPublisher(publisher());
 	server.setLogger(logger());
 	return server;
     }

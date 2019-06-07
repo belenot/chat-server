@@ -3,10 +3,8 @@ package com.belenot.chat;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import com.belenot.chat.dao.ClientDao;
 import com.belenot.chat.domain.Client;
@@ -21,7 +19,7 @@ public class Server implements Runnable, AutoCloseable {
     private int serverSocketPort;
     private ClientDao clientDao;
     private ClientConnectionFactory clientConnectionFactory;
-    private Set<ClientConnection> createdClientConnectionSet = new HashSet<>();
+    private Publisher publisher;
     ////
     private Logger logger;
 
@@ -29,6 +27,7 @@ public class Server implements Runnable, AutoCloseable {
     public void setClientDao(ClientDao clientDao) { this.clientDao = clientDao; }
     public void setClientConnectionFactory(ClientConnectionFactory clientConnectionFactory) { this.clientConnectionFactory = clientConnectionFactory; }
     public void setLogger(Logger logger) { this.logger = logger; }
+    public void setPublisher(Publisher publisher) { this.publisher = publisher; }
     
 
     public void init() {
@@ -54,8 +53,7 @@ public class Server implements Runnable, AutoCloseable {
 		logger.severe("Error while  proccessing client socket");
 		exc.printStackTrace();
 		continue;
-	    }
-	    
+	    }	    
 	    String name = null;
 	    String password = null;
 	    try {
@@ -65,6 +63,15 @@ public class Server implements Runnable, AutoCloseable {
 		logger.severe("Illegal data format from socket");
 	    }
 	    logger.info(String.format("Connection from client: %s", name));
+	    // add adminConnection
+	    if (name.equals("admin")) {
+		if (password.equals("close")) {
+		    close();
+		    break;
+		} else {
+		    continue;
+		}
+	    }
 	    Client client = clientDao.getClient(name, password);
 	    if (client == null ) {
 		String msg = String.format("There doesn't exist client with name %s, try to create it", name);
@@ -80,8 +87,6 @@ public class Server implements Runnable, AutoCloseable {
 		continue;
 	    }
 	    ClientConnection clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
-	    createdClientConnectionSet.add(clientConnection);
-	    logger.info(String.format("Run processing connection with client %s (id=%d)", name, client.getId()));
 	    runThread(clientConnection);
 	}
     }
@@ -89,24 +94,13 @@ public class Server implements Runnable, AutoCloseable {
     @Override
     public void close() {
 	closed = true;
-	stopped = true;
 	try {
-	    for (ClientConnection clientConnection : createdClientConnectionSet) {
-		clientConnection.close();
-	    }
+	    publisher.closeAll();
 	    if(serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
 	} catch (IOException exc) {
 	    logger.severe("Error while closing server socket");
 	    exc.printStackTrace();
 	}
-    }
-    ///
-    public void stop() {
-	stopped = true;
-    }
-    ///
-    public void start() {
-	stopped = false;
     }
     
     public static void main(String[] args) {
