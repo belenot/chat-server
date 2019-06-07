@@ -19,8 +19,6 @@ public class ClientDao {
     private String password;
     private Logger logger;
     
-    private Map<Client, String> clients = new HashMap<>();
-    private int currentId = 0;
     private Connection conn;
 
     public void setHost(String host) { this.host = host; }

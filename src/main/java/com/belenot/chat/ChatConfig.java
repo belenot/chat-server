@@ -2,9 +2,9 @@ package com.belenot.chat;
 
 import java.util.logging.Logger;
 
-import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import com.belenot.chat.aspect.LoggingAspect;
@@ -14,8 +14,8 @@ import com.belenot.chat.factory.ClientConnectionFactory;
 import com.belenot.chat.factory.ClientConnectionFactoryImpl;
 import com.belenot.chat.logging.ServerLogger;
 
-@Configurable
-@EnableAspectJAutoProxy( exposeProxy=true )
+@Configuration
+@EnableAspectJAutoProxy
 public class ChatConfig {
 
     @Bean
@@ -38,9 +38,14 @@ public class ChatConfig {
 	return clientDao;
     }
 
-    @Bean
+    @Bean ( initMethod = "init" )
     public MessageDao messageDao() {
 	MessageDao messageDao = new MessageDao();
+	messageDao.setHost("localhost");
+	messageDao.setPort(8832);
+	messageDao.setUser("chat_db");
+	messageDao.setPassword("chat_db");
+	messageDao.setLogger(logger());
 	return messageDao;
     }
 
