@@ -57,9 +57,13 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener {
 		clientSocket = serverSocket.accept();
 		clientSocket.getInputStream().read(buffer);
 	    } catch (IOException exc) {
-		logger.severe("Error while  proccessing client socket");
-		exc.printStackTrace();
-		continue;
+		if (!serverSocket.isClosed()) {
+		    logger.severe("Error while  proccessing client socket");
+		    exc.printStackTrace();
+		    continue;
+		} else {
+		    break;
+		}
 	    }	    
 	    String name = null;
 	    String password = null;
