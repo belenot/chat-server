@@ -25,7 +25,9 @@ public class ClientConnection implements Runnable, Closeable {
     public void setLogger(Logger logger) { this.logger = logger; }
 
     public void receive(Message message) {
-	String formattedMessage = String.format("[%s]%s: %s", message.getDate().toString(), message.getClient().getName(), message.getText());
+	String adminStatement = message.getClient().isAdmin() ? "[admin]" : "";
+	String isMeStatement = message.getClient().getId() == client.getId() ? "(you)" : "";
+	String formattedMessage = String.format("[%s]%s%s%s: %s", message.getDate().toString(), adminStatement, message.getClient().getName(), isMeStatement, message.getText());
 	try {
 	    OutputStream out = socket.getOutputStream();
 	    out.write(formattedMessage.getBytes());
@@ -54,10 +56,10 @@ public class ClientConnection implements Runnable, Closeable {
 		    textBuffer += (char)b;
 		}
 		if (textBuffer.length() > 0) {
-		    if (textBuffer.equals("close")) {
+		    if (textBuffer.equals("exit")) {
 			break;
 		    }
-		    publisher.publish(client, textBuffer);
+		    proceedInputText(textBuffer);
 		    textBuffer = "";
 		    start = System.currentTimeMillis();
 		}
@@ -81,9 +83,16 @@ public class ClientConnection implements Runnable, Closeable {
     public void close() {
 	logger.info(String.format("Close connection with client %s", client.getName()));
 	try {
-	    if (socket != null && !socket.isClosed()) socket.close();
+	    if (socket != null && !socket.isClosed()) {
+		socket.getOutputStream().write("close".getBytes());
+		socket.close();
+	    }
 	} catch (IOException exc) { }
 	closed = true;
+    }
+
+    protected void proceedInputText(String text) {
+	publisher.publish(client, text);
     }
     
 }

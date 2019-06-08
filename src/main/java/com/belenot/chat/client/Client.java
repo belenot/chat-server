@@ -27,7 +27,7 @@ public class Client {
 	    socket = new Socket(host, port);
 	    socket.getOutputStream().write((new String(userName + "\n" + password)).getBytes());
 	    strBuffer = "";
-	    while (!strBuffer.equals("exit")) {
+	    do {
 		strBuffer = br.readLine();
 		if (strBuffer.equals("read")) {
 		    try {
@@ -40,7 +40,7 @@ public class Client {
 		    continue;
 		}
 		socket.getOutputStream().write(strBuffer.getBytes());
-	    }
+	    } while (!strBuffer.equals("exit"));
 	    
 	} catch (IOException exc) {
 	    exc.printStackTrace();

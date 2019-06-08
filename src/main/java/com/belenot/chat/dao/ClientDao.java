@@ -5,8 +5,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import com.belenot.chat.domain.Client;
@@ -38,23 +36,22 @@ public class ClientDao {
 	
     
     public Client getClient(String name, String password) {
-	//	for (Map.Entry<Client, String> entry : clients.entrySet()) {
-	//  if (entry.getKey().getName().equals(name) && entry.getValue().equals(password))
-	//	return entry.getKey();
-	//}
 	try {
-	    String sql_select = String.format("SELECT client.id FROM client join password on client.id = password.client WHERE client.name = '%s' AND password.password = '%s';", name, password);
+	    String sql_select = String.format("SELECT client.id, client.admin FROM client join password on client.id = password.client WHERE client.name = '%s' AND password.password = '%s';", name, password);
 	    PreparedStatement st = conn.prepareStatement(sql_select);
 	    ResultSet resultSet = st.executeQuery();
 	    int id = -1;
+	    boolean admin = false;
 	    if (resultSet.next()) {
 		id  = resultSet.getInt("id");
+		admin = resultSet.getBoolean("admin");
 	    } else {
 		throw new SQLException("result set is null length");
 	    }
 	    Client client = new Client();
 	    client.setId(id);
 	    client.setName(name);
+	    client.setAdmin(admin);
 	    return client;
 	} catch (SQLException exc) {
 	    logger.severe(exc.getSQLState());
@@ -94,6 +91,10 @@ public class ClientDao {
 	    logger.severe(exc.getSQLState());
 	    return null;
 	}
+    }
+
+    public Client addAdmin(String name, String password) {
+	return null;
     }
 	
 }
