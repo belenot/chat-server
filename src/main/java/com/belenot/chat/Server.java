@@ -6,16 +6,15 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 
 import com.belenot.chat.dao.ClientDao;
 import com.belenot.chat.domain.Client;
+import com.belenot.chat.event.ChatEvent;
 import com.belenot.chat.factory.ClientConnectionFactory;
 
-public class Server implements Runnable, AutoCloseable, ApplicationListener {
+public class Server implements Runnable, AutoCloseable, ApplicationListener<ChatEvent>  {
     private ServerSocket serverSocket;
     private boolean stopped = false;
     private boolean closed = false;
@@ -25,9 +24,6 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener {
     private ClientConnectionFactory clientConnectionFactory;
     private Publisher publisher;
     private Logger logger;
-
-    @Autowired
-    private ApplicationEventPublisher applicationPublisher;
 
     public void setServerSocketPort(int serverSocketPort) { this.serverSocketPort = serverSocketPort; }
     public void setClientDao(ClientDao clientDao) { this.clientDao = clientDao; }
@@ -101,10 +97,21 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener {
     }
 
     @Override
-    public void onApplicationEvent(ApplicationEvent event) {
-	if (event.getSource() instanceof String && ((String)event.getSource()).equals("close")) {
-	    close();
-	} 
+    public void onApplicationEvent(ChatEvent event) {
+	if (!(event.getSource() instanceof ChatCommand)) return;
+	ChatCommand chatCommand = (ChatCommand) event.getSource();
+	String command = chatCommand.getCommand();
+	switch (command) {
+	case "close": close(); break;
+	case "create":
+	    String name = chatCommand.getParameters().get("name");
+	    String password = chatCommand.getParameters().get("password");
+	    clientDao.addClient(name, password);
+	    break;
+	default:
+	    logger.warning(String.format("Unrecognized chat command: %s", command));
+	    break;
+	}
 
     }
     

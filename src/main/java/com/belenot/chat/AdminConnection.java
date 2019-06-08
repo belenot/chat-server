@@ -20,7 +20,8 @@ public class AdminConnection extends ClientConnection {
 	Pattern p = null;
 	p = Pattern.compile("^close$");
 	if (p.matcher(text).find()) {
-	    applicationPublisher.publishEvent(new ChatEvent("close"));
+	    ChatCommand chatCommand = new ChatCommand("close");
+	    applicationPublisher.publishEvent(new ChatEvent(chatCommand));
 	    return;
 	}
 	p = Pattern.compile("^write:");
@@ -28,6 +29,19 @@ public class AdminConnection extends ClientConnection {
 	    super.proceedInputText(text);
 	    return;
 	}
+	p = Pattern.compile("^create:[a-zA-Z][a-zA-Z0-9]*:[a-zA-Z0-9]{1,}$");
+	if (p.matcher(text).find()) {
+	    int firstDoubleDotIndex = text.indexOf(":");
+	    int secondDoubleDotIndex = text.indexOf(":", firstDoubleDotIndex + 1);
+	    String name = text.substring(firstDoubleDotIndex + 1, secondDoubleDotIndex);
+	    String password = text.substring(secondDoubleDotIndex + 1, text.length());
+	    ChatCommand chatCommand = new ChatCommand("create");
+	    chatCommand.addParameter("name", name);
+	    chatCommand.addParameter("password", password);
+	    applicationPublisher.publishEvent(new ChatEvent(chatCommand));
+	    return;
+	}
+	    
 	super.proceedInputText(text);
     }
 	    

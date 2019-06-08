@@ -2,15 +2,10 @@ package com.belenot.chat.event;
 
 import org.springframework.context.ApplicationEvent;
 
+import com.belenot.chat.ChatCommand;
+
 public class ChatEvent extends ApplicationEvent {
-    private String command;
-    public ChatEvent(String command) {
-	super(command);
-	this.command = command;
-    }
-    
-    @Override
-    public String getSource() {
-	return command;
+    public ChatEvent(ChatCommand chatCommand) {
+	super(chatCommand);
     }
 }
