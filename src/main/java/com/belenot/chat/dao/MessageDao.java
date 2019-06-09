@@ -42,11 +42,14 @@ public class MessageDao {
     public Message addMessage(Client client, String text) {
 	try {
 	    long timestamp = (new Date()).getTime();
-	    String sql_query = String.format("INSERT INTO message (text_msg, client, date_create) VALUES ('%s', %d, to_timestamp(%d))", text, client.getId(), timestamp);
+	    String sql_query = "INSERT INTO message (text_msg, client, date_create) VALUES (?, ?, to_timestamp(?))";
 	    PreparedStatement st = conn.prepareStatement(sql_query);
+	    st.setString(1, text);
+	    st.setInt(2, client.getId());
+	    st.setLong(3, timestamp);
 	    st.executeUpdate();
 	    int id = -1;
-	    sql_query = String.format("SELECT id FROM message order by date_create desc LIMIT 1;");
+	    sql_query = "SELECT id FROM message order by date_create desc LIMIT 1;";
 	    st = conn.prepareStatement(sql_query);
 	    ResultSet rs = st.executeQuery();
 	    if (rs.next()) {

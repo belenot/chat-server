@@ -28,18 +28,34 @@ public class Client {
 	    socket.getOutputStream().write((new String(userName + "\n" + password)).getBytes());
 	    strBuffer = "";
 	    do {
+		System.out.print(":>");
 		strBuffer = br.readLine();
 		if (strBuffer.equals("read")) {
 		    try {
-			for (String message : viewInputMessages(socket)) 
+			List<String> messageList = viewInputMessages(socket);
+			System.out.printf("Incomming: %d recieved.\n", messageList.size());
+			for (String message : messageList) {
+			    if (message.equals("close\0")) {
+				try {
+				    socket.close();
+				} catch (IOException exc) { }
+				break;
+			    }
 			    System.out.println(message);
+			}
 		    } catch (IOException exc) {
 			System.out.println("Can't read input messages");
 			exc.printStackTrace();
 		    }
-		    continue;
+		    if (!socket.isClosed()) 
+			continue;
 		}
-		socket.getOutputStream().write(strBuffer.getBytes());
+		if (!socket.isClosed()) {
+		    socket.getOutputStream().write(strBuffer.getBytes());
+		} else {
+		    System.out.println("Connection was closed");
+		    break;
+		}
 	    } while (!strBuffer.equals("exit"));
 	    
 	} catch (IOException exc) {

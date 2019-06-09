@@ -81,11 +81,11 @@ public class ClientConnection implements Runnable, Closeable {
 
     @Override
     public void close() {
-	logger.info(String.format("Close connection with client %s", client.getName()));
 	try {
 	    if (socket != null && !socket.isClosed()) {
-		socket.getOutputStream().write("close".getBytes());
+		socket.getOutputStream().write("close\0".getBytes());
 		socket.close();
+		logger.info(String.format("Close connection with client %s", client.getName()));
 	    }
 	} catch (IOException exc) { }
 	closed = true;

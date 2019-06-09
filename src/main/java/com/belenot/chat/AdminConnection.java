@@ -9,7 +9,7 @@ import com.belenot.chat.event.ChatEvent;
 public class AdminConnection extends ClientConnection {
     ApplicationEventPublisher applicationPublisher;
 
-    //Warning: Very herovo
+    //Warning: Very bad
     public AdminConnection(ApplicationEventPublisher applicationPublisher) {
 	super();
 	this.applicationPublisher = applicationPublisher;

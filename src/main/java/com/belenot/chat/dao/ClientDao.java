@@ -37,8 +37,10 @@ public class ClientDao {
     
     public Client getClient(String name, String password) {
 	try {
-	    String sql_select = String.format("SELECT client.id, client.admin FROM client join password on client.id = password.client WHERE client.name = '%s' AND password.password = '%s';", name, password);
+	    String sql_select = "SELECT client.id, client.admin FROM client join password on client.id = password.client WHERE client.name = ? AND password.password = ?;";
 	    PreparedStatement st = conn.prepareStatement(sql_select);
+	    st.setString(1, name);
+	    st.setString(2, password);
 	    ResultSet resultSet = st.executeQuery();
 	    int id = -1;
 	    boolean admin = false;
@@ -68,8 +70,9 @@ public class ClientDao {
     //NEED TRANSACTION!!!
     public Client addClient(String name, String password) {
 	try {
-	    String sql_query = String.format("INSERT INTO client (name) values ('%s');", name);
+	    String sql_query = "INSERT INTO client (name) values (?);";
 	    PreparedStatement st = conn.prepareStatement(sql_query);
+	    st.setString(1, name);
 	    st.executeUpdate();
 	    sql_query = String.format("SELECT currval('client_id_seq');");
 	    st = conn.prepareStatement(sql_query);
@@ -80,8 +83,10 @@ public class ClientDao {
 	    } else {
 		throw new SQLException();
 	    }
-	    sql_query = String.format("INSERT INTO password (client, password) VALUES (%d, '%s');", id, password);
+	    sql_query = "INSERT INTO password (client, password) VALUES (?, ?);";
 	    st = conn.prepareStatement(sql_query);
+	    st.setInt(1, id);
+	    st.setString(2, password);
 	    st.executeUpdate();
 	    Client client = new Client();
 	    client.setId(id);
