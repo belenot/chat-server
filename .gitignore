@@ -3,3 +3,4 @@
 !pom.xml
 !.gitignore
 /**/workbench.xmi
+!chat-server.png
