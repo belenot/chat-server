@@ -41,14 +41,13 @@ public class ClientConnection implements Runnable, Closeable {
     public boolean isStarted() { return started; }
     public boolean isClosed() { return closed; }
 
-
     @Override
     public void run() {
 	started = true;
 	while (!closed) {
 	    try {
 		String textBuffer = null;
-		textBuffer = readInput(socket.getInputStream());
+		textBuffer = readInputText(socket.getInputStream());
 		if (textBuffer != null) {
 		    proceedInputText(textBuffer);
 		} else {
@@ -65,7 +64,7 @@ public class ClientConnection implements Runnable, Closeable {
 	close();
     }
 
-    protected String readInput(InputStream in) throws IOException {
+    protected String readInputText(InputStream in) throws IOException {
 	int b;
 	String textBuffer = "";
 	while ( in.available() > 0 && (b = in.read()) > 0) {
@@ -78,7 +77,6 @@ public class ClientConnection implements Runnable, Closeable {
 	}
     }
 	
-
     @Override
     public void close() {
 	closed = true;
@@ -88,7 +86,9 @@ public class ClientConnection implements Runnable, Closeable {
 		socket.close();
 		logger.info(String.format("Close connection with client %s", client.getName()));
 	    }
-	} catch (IOException exc) { }
+	} catch (IOException exc) {
+	    logger.severe(String.format("Exception when closing client connection with %s(id=%d): %s\n", client.getName(), client.getId(), exc.toString()));
+	}
     }
 
     protected void proceedInputText(String text) {

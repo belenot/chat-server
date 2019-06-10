@@ -6,12 +6,13 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
 import com.belenot.chat.dao.ClientDao;
 import com.belenot.chat.domain.Client;
 import com.belenot.chat.event.ChatEvent;
+import com.belenot.chat.exception.ServerException;
+import com.belenot.chat.exception.ServerExceptionCode;
 import com.belenot.chat.factory.ClientConnectionFactory;
 
 public class Server implements Runnable, AutoCloseable, ApplicationListener<ChatEvent>  {
@@ -47,7 +48,7 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	    ClientConnection clientConnection = null;
 	    try {
 	        clientConnection = recieveClientConnection();
-	    } catch (Exception exc) {
+	    } catch (ServerException exc) {
 		logger.severe(exc.toString());
 		continue;
 	    }
@@ -87,18 +88,19 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 
     }
 
-    protected ClientConnection recieveClientConnection() throws Exception {
+    protected ClientConnection recieveClientConnection() throws ServerException {
+	ClientConnection clientConnection = null;
 	Socket clientSocket = null;
 	byte[] buffer = new byte[1024];
 	Arrays.fill(buffer, 0, buffer.length, (byte)0);
 	logger.info(String.format("Listen for connections on %d\n", serverSocketPort));
 	try {
-	    //Bring exception when shutdowned by admin. It worth to add timeout?
 	    clientSocket = serverSocket.accept();
 	    clientSocket.getInputStream().read(buffer);
 	} catch (IOException exc) {
 	    if (!serverSocket.isClosed()) {
-		throw new Exception("Error while processing client socket", exc);
+		ServerException serverException = new ServerException("Error while accepting client socket", exc, ServerExceptionCode.RECIEVE);
+		throw serverException;
 	    } else {
 		return null;
 	    }
@@ -108,8 +110,8 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	try {
 	    name = retrieveName(buffer);
 	    password = retrievePassword(buffer);
-	} catch (Exception exc) {
-	    logger.severe("Illegal data format from socket");
+	} catch (IllegalArgumentException exc) {
+	    throw new ServerException("Illegal data format from socket", exc, ServerExceptionCode.RECIEVE);
 	}
 	logger.info(String.format("Authorize attempt from client: %s", name));
 	Client client = clientDao.getClient(name, password);
@@ -119,9 +121,11 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	    } catch (IOException exc) {
 		exc.printStackTrace();
 	    }
-	    throw new Exception(String.format("Can't gain client by name %s\n", name));
+	    throw new ServerException(String.format("Can't gain client by name %s\n", name), ServerExceptionCode.RECIEVE);
 	}
-	ClientConnection clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
+	
+	clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
+	if (clientConnection == null) throw new ServerException("Can't create clientConnection for client: " + name, ServerExceptionCode.RECIEVE);
 	return clientConnection;
     }
 
@@ -133,19 +137,14 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	System.out.println("Server");
     }
 
-    @Deprecated
-    private void runThread(Runnable runnable) {
-	(new Thread(runnable)).start();
-    }
-
     //template username\npassword
-    private String retrieveName(byte[] buffer) throws Exception {
+    private String retrieveName(byte[] buffer) throws IllegalArgumentException {
 	String strBuffer = (new String(buffer)).trim();
 	String name = strBuffer.split("\n")[0];
 	return name;
     }
 
-    private String retrievePassword(byte[] buffer) throws Exception {
+    private String retrievePassword(byte[] buffer) throws IllegalArgumentException {
 	String strBuffer = (new String(buffer)).trim();
 	String password = strBuffer.split("\n")[1];
 	return password;
