@@ -45,42 +45,43 @@ public class ClientConnection implements Runnable, Closeable {
     @Override
     public void run() {
 	started = true;
-	try {
-	    InputStream in = socket.getInputStream();
-	    long timeout = 5000;
-	    long start = System.currentTimeMillis();
-	    int b;
-	    String textBuffer = "";
-	    while (!closed && socket != null && !socket.isClosed() && in != null) {
-		while ( in.available() > 0 && (b = in.read()) > 0) {
-		    textBuffer += (char)b;
-		}
-		if (textBuffer.length() > 0) {
-		    if (textBuffer.equals("exit")) {
-			break;
-		    }
+	while (!closed) {
+	    try {
+		String textBuffer = null;
+		textBuffer = readInput(socket.getInputStream());
+		if (textBuffer != null) {
 		    proceedInputText(textBuffer);
-		    textBuffer = "";
-		    start = System.currentTimeMillis();
-		}
-		else if ( (System.currentTimeMillis() - start) > timeout) {
+		} else {
 		    try {
 			Thread.sleep(1000);
 		    } catch (InterruptedException exc) {
 			logger.severe("Can't sleep thread in client connection with " + client.getName());
 		    }
 		}
+	    } catch (IOException exc) {
+		logger.severe("Error during connection with client with name " + client.getName());
 	    }
-	} catch (IOException exc) {
-	    logger.severe("Error during connection with client with name " + client.getName());
 	}
-	finally {
-	    close();
+	close();
+    }
+
+    protected String readInput(InputStream in) throws IOException {
+	int b;
+	String textBuffer = "";
+	while ( in.available() > 0 && (b = in.read()) > 0) {
+	    textBuffer += (char)b;
+	}
+	if (textBuffer.length() > 0) {
+	    return textBuffer;
+	} else {
+	    return null;
 	}
     }
+	
 
     @Override
     public void close() {
+	closed = true;
 	try {
 	    if (socket != null && !socket.isClosed()) {
 		socket.getOutputStream().write("close\0".getBytes());
@@ -88,11 +89,14 @@ public class ClientConnection implements Runnable, Closeable {
 		logger.info(String.format("Close connection with client %s", client.getName()));
 	    }
 	} catch (IOException exc) { }
-	closed = true;
     }
 
     protected void proceedInputText(String text) {
-	publisher.publish(client, text);
+	if (text.equals("close")) {
+	    close();
+	} else {
+	    publisher.publish(client, text);
+	}
     }
     
 }
