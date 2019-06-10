@@ -44,44 +44,16 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
     @Override
     public void run() {
 	while (!stopped && !closed) {
-	    Socket clientSocket = null;
-	    byte[] buffer = new byte[1024];
-	    Arrays.fill(buffer, 0, buffer.length, (byte)0);
-	    logger.info(String.format("Listen for connections on %d\n", serverSocketPort));
+	    ClientConnection clientConnection = null;
 	    try {
-		//Bring exception when shutdowned by admin. It worth to add timeout?
-		clientSocket = serverSocket.accept();
-		clientSocket.getInputStream().read(buffer);
-	    } catch (IOException exc) {
-		if (!serverSocket.isClosed()) {
-		    logger.severe("Error while  proccessing client socket");
-		    exc.printStackTrace();
-		    continue;
-		} else {
-		    break;
-		}
-	    }	    
-	    String name = null;
-	    String password = null;
-	    try {
-		name = retrieveName(buffer);
-		password = retrievePassword(buffer);
+	        clientConnection = recieveClientConnection();
 	    } catch (Exception exc) {
-		logger.severe("Illegal data format from socket");
-	    }
-	    logger.info(String.format("Connection from client: %s", name));
-	    Client client = clientDao.getClient(name, password);
-	    if (client == null) {
-		String msg = String.format("Can't gain client by name %s\n", name);
-		logger.severe(msg);
-		try {
-		    if (!clientSocket.isClosed()) clientSocket.close();
-		} catch (IOException exc) { exc.printStackTrace(); }
+		logger.severe(exc.toString());
 		continue;
 	    }
-	    ClientConnection clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
-	    runThread(clientConnection);
+	    runClientConnection(clientConnection);
 	}
+	close();
     }
 
     @Override
@@ -114,11 +86,54 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	}
 
     }
+
+    protected ClientConnection recieveClientConnection() throws Exception {
+	Socket clientSocket = null;
+	byte[] buffer = new byte[1024];
+	Arrays.fill(buffer, 0, buffer.length, (byte)0);
+	logger.info(String.format("Listen for connections on %d\n", serverSocketPort));
+	try {
+	    //Bring exception when shutdowned by admin. It worth to add timeout?
+	    clientSocket = serverSocket.accept();
+	    clientSocket.getInputStream().read(buffer);
+	} catch (IOException exc) {
+	    if (!serverSocket.isClosed()) {
+		throw new Exception("Error while processing client socket", exc);
+	    } else {
+		return null;
+	    }
+	}	    
+	String name = null;
+	String password = null;
+	try {
+	    name = retrieveName(buffer);
+	    password = retrievePassword(buffer);
+	} catch (Exception exc) {
+	    logger.severe("Illegal data format from socket");
+	}
+	logger.info(String.format("Authorize attempt from client: %s", name));
+	Client client = clientDao.getClient(name, password);
+	if (client == null) {
+	    try {
+		if (!clientSocket.isClosed()) clientSocket.close();
+	    } catch (IOException exc) {
+		exc.printStackTrace();
+	    }
+	    throw new Exception(String.format("Can't gain client by name %s\n", name));
+	}
+	ClientConnection clientConnection = clientConnectionFactory.newClientConnection(client, clientSocket);
+	return clientConnection;
+    }
+
+    protected void runClientConnection(ClientConnection clientConnection) {
+	(new Thread(clientConnection)).start();
+    }
     
     public static void main(String[] args) {
 	System.out.println("Server");
     }
 
+    @Deprecated
     private void runThread(Runnable runnable) {
 	(new Thread(runnable)).start();
     }
