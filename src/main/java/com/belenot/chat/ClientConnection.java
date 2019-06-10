@@ -48,7 +48,7 @@ public class ClientConnection implements Runnable, Closeable {
 	while (!closed) {
 	    try {
 		String textBuffer = null;
-		textBuffer = readInput(socket.getInputStream());
+		textBuffer = readInputText(socket.getInputStream());
 		if (textBuffer != null) {
 		    proceedInputText(textBuffer);
 		} else {
@@ -65,7 +65,7 @@ public class ClientConnection implements Runnable, Closeable {
 	close();
     }
 
-    protected String readInput(InputStream in) throws IOException {
+    protected String readInputText(InputStream in) throws IOException {
 	int b;
 	String textBuffer = "";
 	while ( in.available() > 0 && (b = in.read()) > 0) {
