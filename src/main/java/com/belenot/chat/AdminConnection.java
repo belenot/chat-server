@@ -9,7 +9,7 @@ import com.belenot.chat.event.ChatEvent;
 public class AdminConnection extends ClientConnection {
     ApplicationEventPublisher applicationPublisher;
 
-    //Warning: Very bad
+    //Warning: bad
     public AdminConnection(ApplicationEventPublisher applicationPublisher) {
 	super();
 	this.applicationPublisher = applicationPublisher;
@@ -38,6 +38,15 @@ public class AdminConnection extends ClientConnection {
 	    ChatCommand chatCommand = new ChatCommand("create");
 	    chatCommand.addParameter("name", name);
 	    chatCommand.addParameter("password", password);
+	    applicationPublisher.publishEvent(new ChatEvent(chatCommand));
+	    return;
+	}
+	p = Pattern.compile("^ban:[a-zA-Z][a-zA-Z0-9]*$");
+	if (p.matcher(text).find()) {
+	    int firstDoubleDotIndex = text.indexOf(":");
+	    String name = text.substring(firstDoubleDotIndex + 1);
+	    ChatCommand chatCommand = new ChatCommand("ban");
+	    chatCommand.addParameter("name", name);
 	    applicationPublisher.publishEvent(new ChatEvent(chatCommand));
 	    return;
 	}

@@ -24,6 +24,10 @@ public class ClientConnection implements Runnable, Closeable {
     public void setPublisher(Publisher publisher) { this.publisher = publisher; }
     public void setLogger(Logger logger) { this.logger = logger; }
 
+    public Client getClient() {
+	return client;
+    }
+
     public void receive(Message message) {
 	String adminStatement = message.getClient().isAdmin() ? "[admin]" : "";
 	String isMeStatement = message.getClient().getId() == client.getId() ? "(you)" : "";
@@ -79,7 +83,6 @@ public class ClientConnection implements Runnable, Closeable {
 	
     @Override
     public void close() {
-	closed = true;
 	try {
 	    if (socket != null && !socket.isClosed()) {
 		socket.getOutputStream().write("close\0".getBytes());
@@ -89,6 +92,7 @@ public class ClientConnection implements Runnable, Closeable {
 	} catch (IOException exc) {
 	    logger.severe(String.format("Exception when closing client connection with %s(id=%d): %s\n", client.getName(), client.getId(), exc.toString()));
 	}
+	closed = true;
     }
 
     protected void proceedInputText(String text) {

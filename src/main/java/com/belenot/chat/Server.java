@@ -61,7 +61,7 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
     public void close() {
 	closed = true;
 	try {
-	    publisher.closeAll();
+	    publisher.removeAllClientConnections(true);
 	    if(serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
 	} catch (IOException exc) {
 	    logger.severe("Error while closing server socket");
@@ -77,9 +77,10 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
 	switch (command) {
 	case "close": close(); break;
 	case "create":
-	    String name = chatCommand.getParameters().get("name");
-	    String password = chatCommand.getParameters().get("password");
-	    clientDao.addClient(name, password);
+	    clientDao.addClient(chatCommand.getParameters().get("name"), chatCommand.getParameters().get("password"));
+	    break;
+	case "ban":
+	    publisher.removeClientConnectionSetByName(chatCommand.getParameters().get("name"), true);
 	    break;
 	default:
 	    logger.warning(String.format("Unrecognized chat command: %s", command));
