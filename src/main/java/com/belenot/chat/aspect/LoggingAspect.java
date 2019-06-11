@@ -1,6 +1,7 @@
 package com.belenot.chat.aspect;
 
 import java.net.Socket;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import org.aspectj.lang.JoinPoint;
@@ -25,7 +26,8 @@ public class LoggingAspect {
 	    int id = client.getId();
 	    String hostaddress = socket.getInetAddress().getHostAddress();
 	    int port = socket.getPort();
-	    String message = String.format("Creating connection for %s with id %d on %s:%d\n",name, id, hostaddress, port);
+	    Date date = new Date();
+	    String message = String.format("[%s] Creating connection for %s with id %d on %s:%d\n",date.toString() ,name, id, hostaddress, port);
 	    logger.info(message);
 	} catch (NullPointerException exc) {
 	    //Rewrite with severe, change to around and terminate joinpoint's execution

@@ -6,7 +6,9 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.env.Environment;
 
 import com.belenot.chat.dao.ClientDao;
 import com.belenot.chat.domain.Client;
@@ -19,6 +21,9 @@ public class Server implements Runnable, AutoCloseable, ApplicationListener<Chat
     private ServerSocket serverSocket;
     private boolean stopped = false;
     private boolean closed = false;
+
+    @Autowired
+    private Environment env;
     
     private int serverSocketPort;
     private ClientDao clientDao;
