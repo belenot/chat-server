@@ -8,7 +8,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.sourceEncoding>UTF-8</maven.compiler.sourceEncoding>
     <maven.compiler.targetEncoding>UTF-8</maven.compiler.targetEncoding>
-    <spring.ver>5.0.9.RELEASE</spring.ver>
+    <spring.ver>5.2.22.RELEASE</spring.ver>
   </properties>
 
   <dependencies>
